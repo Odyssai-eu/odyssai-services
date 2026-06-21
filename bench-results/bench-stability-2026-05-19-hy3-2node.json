@@ -1,0 +1,479 @@
+{
+  "started_at": "2026-05-19T13:29:14Z",
+  "wall_s": 180.1,
+  "endpoint": "http://192.168.86.141:8000",
+  "cluster": "argo",
+  "model": "/Volumes/models/odysseus/inferencerlabs/Hy3-preview-MLX-9bit",
+  "nodes": 2,
+  "iterations_total": 5,
+  "iterations_completed": 5,
+  "aborted_degraded": false,
+  "iterations": [
+    {
+      "iteration": 1,
+      "pre": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.3,
+          "free_gb": 340.7,
+          "runner_count": 1,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.1,
+          "free_gb": 128.7,
+          "runner_count": 1,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "load": {
+        "ok": true,
+        "elapsed_s": 30.6,
+        "load_s": 29.06798529624939,
+        "error": null
+      },
+      "chat": {
+        "ok": true,
+        "elapsed_s": 3.91,
+        "completion_tokens": 20,
+        "prompt_tokens": 26,
+        "ttft_proxy_s": 3.3742423057556152,
+        "tps": 5.183792540724551,
+        "error": null
+      },
+      "unload": {
+        "ok": true,
+        "elapsed_s": 1.45,
+        "sweep_warnings": []
+      },
+      "post": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "degraded_after": false
+    },
+    {
+      "iteration": 2,
+      "pre": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "load": {
+        "ok": true,
+        "elapsed_s": 28.95,
+        "load_s": 28.597806215286255,
+        "error": null
+      },
+      "chat": {
+        "ok": true,
+        "elapsed_s": 5.97,
+        "completion_tokens": 20,
+        "prompt_tokens": 26,
+        "ttft_proxy_s": 5.442925930023193,
+        "tps": 3.381189606376716,
+        "error": null
+      },
+      "unload": {
+        "ok": true,
+        "elapsed_s": 1.39,
+        "sweep_warnings": []
+      },
+      "post": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.1,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "degraded_after": false
+    },
+    {
+      "iteration": 3,
+      "pre": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.1,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "load": {
+        "ok": true,
+        "elapsed_s": 28.87,
+        "load_s": 28.562341928482056,
+        "error": null
+      },
+      "chat": {
+        "ok": true,
+        "elapsed_s": 4.82,
+        "completion_tokens": 20,
+        "prompt_tokens": 26,
+        "ttft_proxy_s": 4.295799493789673,
+        "tps": 4.191393077507671,
+        "error": null
+      },
+      "unload": {
+        "ok": true,
+        "elapsed_s": 1.48,
+        "sweep_warnings": []
+      },
+      "post": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 243.7,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.1,
+          "free_gb": 151.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "degraded_after": false
+    },
+    {
+      "iteration": 4,
+      "pre": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 243.7,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.1,
+          "free_gb": 151.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "load": {
+        "ok": true,
+        "elapsed_s": 28.91,
+        "load_s": 28.560922145843506,
+        "error": null
+      },
+      "chat": {
+        "ok": true,
+        "elapsed_s": 4.24,
+        "completion_tokens": 20,
+        "prompt_tokens": 26,
+        "ttft_proxy_s": 3.713042736053467,
+        "tps": 4.7895461628712495,
+        "error": null
+      },
+      "unload": {
+        "ok": true,
+        "elapsed_s": 1.4,
+        "sweep_warnings": []
+      },
+      "post": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "degraded_after": false
+    },
+    {
+      "iteration": 5,
+      "pre": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 4.0,
+          "free_gb": 244.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.3,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "load": {
+        "ok": true,
+        "elapsed_s": 28.48,
+        "load_s": 28.099656343460083,
+        "error": null
+      },
+      "chat": {
+        "ok": true,
+        "elapsed_s": 5.58,
+        "completion_tokens": 20,
+        "prompt_tokens": 26,
+        "ttft_proxy_s": 5.059292793273926,
+        "tps": 3.599149687431271,
+        "error": null
+      },
+      "unload": {
+        "ok": true,
+        "elapsed_s": 1.4,
+        "sweep_warnings": []
+      },
+      "post": [
+        {
+          "host": "ultra-512",
+          "wired_gb": 8.2,
+          "free_gb": 494.6,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256a",
+          "wired_gb": 3.9,
+          "free_gb": 244.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256b",
+          "wired_gb": 4.2,
+          "free_gb": 241.2,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        },
+        {
+          "host": "ultra-256c",
+          "wired_gb": 5.4,
+          "free_gb": 151.4,
+          "runner_count": 0,
+          "rdma_active": 3,
+          "rdma_total": 6
+        }
+      ],
+      "degraded_after": false
+    }
+  ],
+  "aggregate": {
+    "load_success_rate": 1.0,
+    "chat_success_rate": 1.0,
+    "unload_success_rate": 1.0,
+    "iterations_with_sweep_warnings": 0
+  }
+}

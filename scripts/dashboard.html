@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Odyssai Services</title>
+<style>
+:root {
+  --ground: #F4F1ED;
+  --surface: #FFFFFF;
+  --surface-2: #FAF7F2;
+  --line: #DBD3C7;
+  --line-soft: #ECE6DC;
+  --ink: #1B1810;
+  --ink-2: #6B6357;
+  --ink-3: #9C9081;
+  --ink-4: #C6BAA8;
+  --blue: #2F6FC5;
+  --blue-deep: #1E4D8E;
+  --blue-soft: #E4ECF7;
+  --green: #3B8C5C;
+  --green-deep: #285E3F;
+  --green-soft: #E2F0E5;
+  --rust: #C25B3F;
+  --rust-deep: #8E3D26;
+  --rust-soft: #F6E1D8;
+  --amber: #B07A1E;
+  --amber-soft: #F4E7CC;
+  --font-display: ui-serif, "Iowan Old Style", "PT Serif", Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--ground); color: var(--ink); font-family: var(--font-sans); font-size: 14px; }
+.app { max-width: 1280px; margin: 0 auto; padding: 24px 28px 80px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 24px; border-bottom: 1px solid var(--line-soft); margin-bottom: 24px; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand .title { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--ink); }
+.brand .sub { font-size: 12px; color: var(--ink-2); }
+.health-pill { padding: 6px 12px; border-radius: 999px; background: var(--green-soft); color: var(--green-deep); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.health-pill.err { background: var(--rust-soft); color: var(--rust-deep); }
+
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 900px) { .services-grid { grid-template-columns: 1fr; } }
+
+.service-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px; display: flex; flex-direction: column; gap: 18px;
+}
+.service-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.service-name { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--ink); }
+.service-desc { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.service-host { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+.state-pill {
+  padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.state-pill.running { background: var(--green-soft); color: var(--green-deep); }
+.state-pill.stopped { background: var(--rust-soft); color: var(--rust-deep); }
+.state-pill.unknown { background: var(--ink-4); color: var(--ink); }
+.state-pill .dot { width: 6px; height: 6px; border-radius: 3px; background: currentColor; }
+
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.info-cell { background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 8px; padding: 10px 12px; }
+.info-cell .cap { font-size: 10px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.info-cell .val { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.info-cell .val.dim { color: var(--ink-3); }
+
+.row { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 11px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.05em; text-transform: uppercase; }
+.model-path { font-family: var(--font-mono); font-size: 12px; color: var(--ink); word-break: break-all; background: var(--surface-2); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line-soft); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  color: var(--ink); font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.12s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--ink-3); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+.btn.primary:hover:not(:disabled) { background: var(--blue-deep); border-color: var(--blue-deep); }
+.btn.destructive { color: var(--rust-deep); border-color: var(--rust); }
+.btn.destructive:hover:not(:disabled) { background: var(--rust-soft); }
+
+select, input.text {
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); font-size: 13px;
+  font-family: var(--font-mono); width: 100%; outline: none;
+}
+select:focus, input.text:focus { border-color: var(--blue); }
+
+.model-row { display: flex; gap: 8px; align-items: center; }
+.model-row select { flex: 1; }
+
+.logs-panel {
+  background: #1B1810; color: #E5E0D5; border-radius: 10px; padding: 12px 14px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.55;
+  max-height: 280px; overflow-y: auto; border: 1px solid var(--line);
+}
+.logs-panel .empty { color: #6B6357; font-style: italic; }
+.logs-panel .line { white-space: pre-wrap; word-break: break-all; }
+.logs-panel .line.err { color: #E89A85; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 18px; border-radius: 10px; background: var(--ink); color: white; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 9000; }
+.toast.err { background: var(--rust-deep); }
+.toast.ok { background: var(--green-deep); }
+
+/* Auth overlay */
+#auth-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+#auth-overlay .auth-backdrop { position: absolute; inset: 0; background: rgba(11, 14, 20, 0.65); backdrop-filter: blur(4px); }
+#auth-overlay .auth-modal {
+  position: relative; width: 420px; max-width: 92vw;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 24px 22px; box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; gap: 12px;
+}
+#auth-overlay .auth-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+#auth-overlay .auth-sub { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+#auth-overlay .auth-err { padding: 8px 10px; background: var(--rust-soft); color: var(--rust-deep); border-radius: 6px; font-size: 12px; }
+#auth-overlay .auth-input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); font-size: 13px; outline: none; font-family: var(--font-mono); }
+#auth-overlay .auth-input:focus { border-color: var(--blue); }
+#auth-overlay .auth-actions { display: flex; justify-content: flex-end; }
+#auth-overlay .auth-hint { font-size: 11px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand">
+      <div class="title">Odyssai Services</div>
+      <div class="sub">Personal services cockpit · mlx-vlm, mlx-coder · port :8001</div>
+    </div>
+    <div id="health" class="health-pill">CHECKING…</div>
+  </div>
+  <div id="grid" class="services-grid"><div style="grid-column: 1/-1;padding:60px 0;text-align:center;color:var(--ink-3)">Loading services…</div></div>
+
+  <div style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line-soft)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink)">Bench</div>
+        <div style="font-size:12px;color:var(--ink-2);margin-top:2px">Stress + Sweep + Stability against the Odysseus engine. Internal tool — finds when things break.</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" data-act="bench-toggle" data-mode="stress">Stress</button>
+        <button class="btn" data-act="bench-toggle" data-mode="sweep">Sweep</button>
+        <button class="btn" data-act="bench-toggle" data-mode="stability">Stability</button>
+        <button class="btn" data-act="bench-toggle" data-mode="endurance">Endurance</button>
+        <button class="btn" data-act="bench-toggle" data-mode="history">History</button>
+      </div>
+    </div>
+    <div id="bench-body"></div>
+  </div>
+</div>
+
+<script>
+const AUTH_KEY = 'odyssai-services-token';
+const getTok = () => localStorage.getItem(AUTH_KEY) || '';
+const setTok = (t) => t ? localStorage.setItem(AUTH_KEY, t) : localStorage.removeItem(AUTH_KEY);
+const authH = () => { const t = getTok(); return t ? { authorization: 'Bearer ' + t } : {}; };
+
+async function getJ(url) {
+  const r = await fetch(url, { cache: 'no-store', headers: { ...authH() } });
+  if (r.status === 401) { showAuth(); throw new Error('401'); }
+  if (!r.ok) throw new Error(r.status + ' ' + url);
+  return r.json();
+}
+async function postJ(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...authH() }, body: body == null ? undefined : JSON.stringify(body) });
+  if (r.status === 401) { showAuth(); throw new Error('401'); }
+  if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200)); }
+  return r.json();
+}
+
+function toast(msg, kind) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const el = document.createElement('div'); el.className = 'toast ' + (kind || ''); el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function escH(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function basename(p) { return p ? p.split('/').filter(Boolean).pop() : '—'; }
+function fmtMB(mb) { return mb == null ? '—' : (mb >= 1024 ? (mb/1024).toFixed(1) + ' GB' : mb + ' MB'); }
+
+const state = { services: [], modelsByService: {} };
+
+async function refresh() {
+  try {
+    const { data } = await getJ('/admin/services');
+    state.services = data;
+    render();
+    document.getElementById('health').textContent = 'OK';
+    document.getElementById('health').classList.remove('err');
+    // background fetch models per service (cheap, cached on disk via SSH)
+    for (const s of data) {
+      if (!state.modelsByService[s.id]) {
+        getJ(`/admin/services/${s.id}/models`).then(r => {
+          state.modelsByService[s.id] = r.data || [];
+          render();
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    if (e.message !== '401') {
+      document.getElementById('health').textContent = 'ERROR';
+      document.getElementById('health').classList.add('err');
+    }
+  }
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  if (!state.services.length) { grid.innerHTML = '<div style="grid-column:1/-1;color:var(--ink-3);padding:40px;text-align:center">No services configured.</div>'; return; }
+  grid.innerHTML = state.services.map(renderCard).join('');
+  // wire actions
+  document.querySelectorAll('[data-act]').forEach(el => {
+    el.addEventListener('click', handleAct);
+    if (el.tagName === 'SELECT') el.addEventListener('change', handleAct);
+  });
+}
+
+function renderCard(s) {
+  const stateCls = s.running ? 'running' : 'stopped';
+  const stateTxt = s.running ? 'running' : 'stopped';
+  const h = s.host || {};
+  const models = state.modelsByService[s.id] || [];
+  const loadedShort = basename(s.loaded_model);
+  const selectedShort = basename(s.selected_model);
+  const canSwitch = (s.id === 'vlm');  // only vlm supports live model switching
+  return `
+    <div class="service-card">
+      <div class="service-head">
+        <div>
+          <div class="service-name">${escH(s.name)}</div>
+          <div class="service-desc">${escH(s.description)}</div>
+          <div class="service-host">${escH(s.host_id)} · ${escH(s.ssh)} · :${s.port}</div>
+        </div>
+        <span class="state-pill ${stateCls}"><span class="dot"></span>${stateTxt}</span>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell"><div class="cap">PID</div><div class="val ${s.pid?'':'dim'}">${s.pid || '—'}</div></div>
+        <div class="info-cell"><div class="cap">Port</div><div class="val ${s.port_listen?'':'dim'}">${s.port_listen ? 'LISTEN' : '—'}</div></div>
+        <div class="info-cell"><div class="cap">Latency</div><div class="val ${s.http_latency_ms?'':'dim'}">${s.http_latency_ms != null ? s.http_latency_ms + ' ms' : '—'}</div></div>
+        <div class="info-cell"><div class="cap">Free RAM</div><div class="val ${h.free_mb!=null?'':'dim'}">${fmtMB(h.free_mb)}</div></div>
+      </div>
+
+      <div class="row">
+        <div class="label">Loaded model</div>
+        <div class="model-path">${escH(loadedShort)}${s.loaded_model && s.loaded_model !== loadedShort ? `<br><span style="color:var(--ink-3);font-size:10px">${escH(s.loaded_model)}</span>` : ''}</div>
+      </div>
+
+      ${canSwitch ? `
+        <div class="row">
+          <div class="label">Switch model (requires restart)</div>
+          <div class="model-row">
+            <select data-act="switch-select" data-sid="${s.id}">
+              <option value="">— pick a model —</option>
+              ${models.map(m => `<option value="${escH(m.id)}" ${m.id === s.selected_model ? 'selected' : ''}>${escH(m.name)}${m.has_vision ? ' · vision' : ''}</option>`).join('')}
+            </select>
+            <button class="btn primary" data-act="load-selected" data-sid="${s.id}">Load + restart</button>
+          </div>
+        </div>` : `
+        <div class="row">
+          <div class="label">Available models on host</div>
+          <div style="font-size:12px;color:var(--ink-2);font-style:italic">Model is hardcoded in the watchdog. To switch, edit <span style="font-family:var(--font-mono)">~/bin/${s.id === 'coder' ? 'mlx-coder' : s.id}-watchdog.sh</span> on ${escH(s.host_id)}.</div>
+        </div>
+      `}
+
+      <div class="actions">
+        ${s.running
+          ? `<button class="btn destructive" data-act="stop" data-sid="${s.id}">⏹ Stop</button>
+             <button class="btn" data-act="restart" data-sid="${s.id}">↻ Restart</button>`
+          : `<button class="btn primary" data-act="start" data-sid="${s.id}">▶ Start</button>`}
+        <button class="btn destructive" data-act="reboot-host" data-sid="${s.id}" style="margin-left:auto">⚠ Reboot ${escH(s.host_id)}</button>
+      </div>
+
+      <details>
+        <summary style="cursor:pointer;font-size:12px;color:var(--ink-2);font-weight:600">Recent logs</summary>
+        <div id="logs-${s.id}" class="logs-panel" style="margin-top:8px">
+          <div class="empty">Click <b>Load logs</b> to fetch the last 100 lines</div>
+        </div>
+        <div style="margin-top:6px">
+          <button class="btn" data-act="logs" data-sid="${s.id}" style="font-size:11px;padding:5px 10px">Load logs</button>
+        </div>
+      </details>
+    </div>
+  `;
+}
+
+async function handleAct(e) {
+  const el = e.currentTarget;
+  const act = el.dataset.act;
+  const sid = el.dataset.sid;
+
+  if (act === 'switch-select') return;  // just stores the selection
+
+  if (act === 'load-selected') {
+    const sel = document.querySelector(`select[data-sid="${sid}"][data-act="switch-select"]`);
+    const model = sel?.value;
+    if (!model) { toast('pick a model first', 'err'); return; }
+    if (!confirm(`Load ${basename(model)} on ${sid} and restart the service?`)) return;
+    try {
+      await postJ(`/admin/services/${sid}/load`, { model });
+      toast('load + restart issued', 'ok');
+      setTimeout(refresh, 2500);
+    } catch (err) { toast('load failed: ' + err.message, 'err'); }
+    return;
+  }
+
+  if (act === 'start' || act === 'restart' || act === 'stop') {
+    const verb = act === 'start' ? 'Start' : act === 'stop' ? 'Stop' : 'Restart';
+    if (act === 'stop' && !confirm(`Stop ${sid}? The cron watchdog will respect the __unloaded__ marker.`)) return;
+    try {
+      await postJ(`/admin/services/${sid}/${act}`);
+      toast(`${verb} ${sid} issued`, 'ok');
+      setTimeout(refresh, 2500);
+    } catch (err) { toast(`${verb} failed: ` + err.message, 'err'); }
+    return;
+  }
+
+  if (act === 'reboot-host') {
+    const s = state.services.find(x => x.id === sid);
+    if (!confirm(`Reboot ${s?.host_id}? In-flight inferences will fail. Host unreachable ~90 s.`)) return;
+    try {
+      const r = await postJ(`/admin/services/${sid}/host/reboot`);
+      if (r.method === 'failed') toast(`reboot failed: ${r.error || 'no method worked'}`, 'err');
+      else toast(`${s?.host_id} rebooting via ${r.method}`, 'ok');
+    } catch (err) { toast('reboot failed: ' + err.message, 'err'); }
+    return;
+  }
+
+  if (act === 'logs') {
+    const pane = document.getElementById('logs-' + sid);
+    pane.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      const r = await getJ(`/admin/services/${sid}/logs?lines=100`);
+      const lines = r.data || [];
+      if (!lines.length) { pane.innerHTML = '<div class="empty">No logs found</div>'; return; }
+      pane.innerHTML = lines.map(l => {
+        const err = /error|exception|traceback/i.test(l);
+        return `<div class="line${err?' err':''}">${escH(l)}</div>`;
+      }).join('');
+      pane.scrollTop = pane.scrollHeight;
+    } catch (err) { pane.innerHTML = `<div class="empty">Failed: ${escH(err.message)}</div>`; }
+    return;
+  }
+}
+
+// ── Auth overlay (same pattern as Odysseus) ─────────────────────────
+let _authShown = false;
+function showAuth(msg) {
+  if (_authShown) return; _authShown = true;
+  const div = document.createElement('div'); div.id = 'auth-overlay';
+  div.innerHTML = `
+    <div class="auth-backdrop"></div>
+    <div class="auth-modal">
+      <div class="auth-title">Services admin token required</div>
+      <div class="auth-sub">Paste the value of <code>ODYSSAI_SERVICES_TOKEN</code> from the container env.</div>
+      ${msg ? `<div class="auth-err">${escH(msg)}</div>` : ''}
+      <input id="ai" type="password" class="auth-input" placeholder="paste token…" autocomplete="off"/>
+      <div class="auth-actions"><button id="as" class="btn primary">Unlock</button></div>
+      <div class="auth-hint">Stored in this browser's localStorage.</div>
+    </div>`;
+  document.body.appendChild(div);
+  const input = document.getElementById('ai');
+  input.focus();
+  const submit = async () => {
+    const t = input.value.trim(); if (!t) return;
+    try {
+      const r = await fetch('/admin/services', { headers: { authorization: 'Bearer ' + t } });
+      if (r.status === 401) { input.select(); toast('token rejected', 'err'); return; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      setTok(t); _authShown = false; document.getElementById('auth-overlay').remove(); refresh();
+    } catch (e) { toast('auth check failed: ' + e.message, 'err'); }
+  };
+  document.getElementById('as').addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+}
+
+refresh();
+setInterval(refresh, 7000);
+
+// ─── Bench (Stress / Sweep / History) ───────────────────────────────
+const bench = {
+  mode: 'stress',
+  targets: [],                          // /admin/bench/targets
+  clusters: [],                         // /admin/bench/clusters
+  stress_history: [],
+  sweep_history: [],
+  stability_history: [],
+  endurance_history: [],
+  active: null,                         // { id, kind: 'stress'|'sweep'|'stability'|'endurance', live: {...} }
+  form_stress: {
+    models: '', concurrency: 4, total: 20,
+    prompt: 'Tell me about the ocean in three sentences.',
+    maxTokens: 150, temperature: 0.7,
+  },
+  form_endurance: {
+    model: '', concurrency: 1,
+    prompt: 'Tell me about the ocean in three sentences.',
+    maxTokens: 150, temperature: 0.7,
+  },
+  form_sweep: {
+    type: 'concurrency', values: '1,2,4,8',
+    repeats: 3, models: '', total: 10,
+    prompt: 'Tell me about the ocean in three sentences.',
+    maxTokens: 150, temperature: 0.7,
+  },
+  // Stability needs the full upstream model PATH (not the alias), because
+  // /admin/{cluster}/load expects e.g. /Volumes/models/odysseus/.../foo.
+  // Cluster id is populated from /admin/bench/clusters on first load —
+  // empty default lets us pick the first enabled one then.
+  form_stability: {
+    cluster: '', model: '', nodes: 2, iterations: 5,
+    prompt: 'Write a short haiku about a Mac Studio cluster.',
+    maxTokens: 200,
+  },
+};
+
+async function loadBenchData() {
+  // Auto-reconnect if any bench run is active server-side and we lost state (e.g. page reload or tab switch)
+  if (!bench.active) {
+    try {
+      const { runs } = await getJ('/admin/bench/active');
+      if (runs?.length) {
+        const { runId, kind } = runs[0];
+        if (kind === 'endurance') {
+          const samples = await getJ(`/admin/bench/endurance/${runId}/samples`).catch(() => ({ data: [] }));
+          bench.active = {
+            id: runId, kind: 'endurance',
+            live: { kind: 'endurance', startedAt: null, inferences: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0, tkPerSec: 0, uptimeSec: 0, errors: 0 },
+            samples: samples.data || [],
+          };
+          bench.mode = 'endurance';
+          attachEnduranceSSE(runId);
+        } else if (kind === 'stress') {
+          bench.active = { id: runId, kind: 'stress', live: { kind: 'stress', completed: 0, total: 0, inFlight: 0, items: [] } };
+          bench.mode = 'stress';
+          attachStressSSE(runId);
+        } else if (kind === 'sweep') {
+          bench.active = { id: runId, kind: 'sweep', live: { kind: 'sweep', runs: [] } };
+          bench.mode = 'sweep';
+          attachSweepSSE(runId);
+        } else if (kind === 'stability') {
+          bench.active = { id: runId, kind: 'stability', live: { kind: 'stability', completed: 0, total: 0, currentIter: 0, iterations: [] } };
+          bench.mode = 'stability';
+          attachStabilitySSE(runId);
+        }
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const [t, c, sh, swh, stbh, endh] = await Promise.all([
+      getJ('/admin/bench/targets').catch(() => ({ data: [] })),
+      getJ('/admin/bench/clusters').catch(() => ({ data: [] })),
+      getJ('/admin/bench/stress/runs').catch(() => ({ data: [] })),
+      getJ('/admin/bench/sweep/runs').catch(() => ({ data: [] })),
+      getJ('/admin/bench/stability/runs').catch(() => ({ data: [] })),
+      getJ('/admin/bench/endurance/runs').catch(() => ({ data: [] })),
+    ]);
+    bench.targets = t?.data || [];
+    bench.clusters = c?.data || [];
+    bench.stress_history = sh?.data || [];
+    bench.sweep_history = swh?.data || [];
+    bench.stability_history = stbh?.data || [];
+    bench.endurance_history = endh?.data || [];
+    if (!bench.form_stress.models && bench.targets.length) bench.form_stress.models = bench.targets[0].id;
+    if (!bench.form_sweep.models && bench.targets.length) bench.form_sweep.models = bench.targets[0].id;
+    if (!bench.form_endurance.model && bench.targets.length) bench.form_endurance.model = bench.targets[0].id;
+    // Default stability cluster = first enabled, mlx-distributed (i.e. the
+    // ones that actually support /admin/{id}/load and pipeline-parallel —
+    // not the direct-vlm VLM "cluster" which doesn't fit the LOAD/UNLOAD loop).
+    if (!bench.form_stability.cluster) {
+      const first = bench.clusters.find(c => c.enabled && c.kind === 'mlx-distributed')
+                 || bench.clusters.find(c => c.enabled)
+                 || bench.clusters[0];
+      if (first) bench.form_stability.cluster = first.id;
+    }
+    renderBench();
+  } catch (e) {}
+}
+
+function renderBench() {
+  const body = document.getElementById('bench-body');
+  if (!body) return;
+  if (bench.mode === 'stress') body.innerHTML = renderBenchStress();
+  else if (bench.mode === 'sweep') body.innerHTML = renderBenchSweep();
+  else if (bench.mode === 'stability') body.innerHTML = renderBenchStability();
+  else if (bench.mode === 'endurance') { body.innerHTML = renderBenchEndurance(); requestAnimationFrame(drawEnduranceChart); }
+  else body.innerHTML = renderBenchHistory();
+  // Wire up handlers on the rendered body
+  body.querySelectorAll('[data-act]').forEach(el => {
+    el.addEventListener('click', handleBenchAct);
+    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+      el.addEventListener('input', handleBenchAct);
+      el.addEventListener('change', handleBenchAct);
+    }
+  });
+  // ALSO wire the toggle buttons (Stress / Sweep / History) — they live
+  // OUTSIDE #bench-body so renderBench's body-scoped selector misses them.
+  // Use a delegated handler attached once at document level (idempotent).
+  if (!document._benchTogglesWired) {
+    document.querySelectorAll('[data-act="bench-toggle"]').forEach(el => {
+      el.addEventListener('click', handleBenchAct);
+    });
+    document._benchTogglesWired = true;
+  }
+  // Visually mark the active toggle
+  document.querySelectorAll('[data-act="bench-toggle"]').forEach(el => {
+    if (el.dataset.mode === bench.mode) {
+      el.style.background = 'var(--ink)';
+      el.style.color = 'white';
+      el.style.borderColor = 'var(--ink)';
+    } else {
+      el.style.background = '';
+      el.style.color = '';
+      el.style.borderColor = '';
+    }
+  });
+}
+
+function modelOptions(selected) {
+  const opts = ['<option value="">(pick a model)</option>'];
+  for (const t of bench.targets) {
+    opts.push(`<option value="${escH(t.id)}" ${selected === t.id ? 'selected' : ''}>${escH(t.id)}${t.pool ? ' · ' + escH(t.pool) : ''}${t.loaded ? ' · loaded' : ''}</option>`);
+  }
+  return opts.join('');
+}
+
+function renderBenchStress() {
+  const f = bench.form_stress;
+  const live = bench.active?.kind === 'stress' ? bench.active.live : null;
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px">
+      <div class="row">
+        <div class="label">Model (alias on Odysseus)</div>
+        <select data-act="bench-form" data-form="stress" data-field="models">${modelOptions(f.models)}</select>
+      </div>
+      <div class="row">
+        <div class="label">Concurrency</div>
+        <input class="text" data-act="bench-form" data-form="stress" data-field="concurrency" type="number" min="1" max="128" value="${f.concurrency}"/>
+      </div>
+      <div class="row">
+        <div class="label">Total requests</div>
+        <input class="text" data-act="bench-form" data-form="stress" data-field="total" type="number" min="1" max="1000" value="${f.total}"/>
+      </div>
+      <div class="row">
+        <div class="label">Max tokens</div>
+        <input class="text" data-act="bench-form" data-form="stress" data-field="maxTokens" type="number" min="1" max="32000" value="${f.maxTokens}"/>
+      </div>
+      <div class="row" style="grid-column:1 / -1">
+        <div class="label">Prompt</div>
+        <textarea data-act="bench-form" data-form="stress" data-field="prompt" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px;resize:vertical">${escH(f.prompt)}</textarea>
+      </div>
+      <div class="row" style="grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between">
+        <div style="font-size:12px;color:var(--ink-3);font-family:var(--font-mono)">temp=${f.temperature}</div>
+        <button class="btn primary" data-act="bench-stress-start" ${live ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>${live ? 'Running…' : 'Start stress'}</button>
+      </div>
+    </div>
+    ${live ? renderLivePanel(live) : ''}
+  `;
+}
+
+function renderBenchSweep() {
+  const f = bench.form_sweep;
+  const live = bench.active?.kind === 'sweep' ? bench.active.live : null;
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px">
+      <div class="row">
+        <div class="label">Sweep type</div>
+        <select data-act="bench-form" data-form="sweep" data-field="type">
+          <option value="concurrency" ${f.type === 'concurrency' ? 'selected' : ''}>Concurrency ramp</option>
+          <option value="repeat" ${f.type === 'repeat' ? 'selected' : ''}>Repeat identical</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="label">Model</div>
+        <select data-act="bench-form" data-form="sweep" data-field="models">${modelOptions(f.models)}</select>
+      </div>
+      ${f.type === 'concurrency' ? `
+        <div class="row">
+          <div class="label">Concurrency values (comma-separated)</div>
+          <input class="text" data-act="bench-form" data-form="sweep" data-field="values" value="${escH(f.values)}" placeholder="1,2,4,8,16"/>
+        </div>
+        <div class="row">
+          <div class="label">Total per run (auto if blank)</div>
+          <input class="text" data-act="bench-form" data-form="sweep" data-field="totalPerRun" type="number" min="1" value="${f.totalPerRun || ''}" placeholder="auto: max(c*5, 10)"/>
+        </div>
+      ` : `
+        <div class="row">
+          <div class="label">Repeats</div>
+          <input class="text" data-act="bench-form" data-form="sweep" data-field="repeats" type="number" min="1" max="20" value="${f.repeats}"/>
+        </div>
+        <div class="row">
+          <div class="label">Total per run</div>
+          <input class="text" data-act="bench-form" data-form="sweep" data-field="total" type="number" min="1" value="${f.total}"/>
+        </div>
+        <div class="row" style="display:none"></div>
+      `}
+      <div class="row">
+        <div class="label">Max tokens</div>
+        <input class="text" data-act="bench-form" data-form="sweep" data-field="maxTokens" type="number" min="1" max="32000" value="${f.maxTokens}"/>
+      </div>
+      <div class="row" style="grid-column:1 / -1">
+        <div class="label">Prompt</div>
+        <textarea data-act="bench-form" data-form="sweep" data-field="prompt" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px;resize:vertical">${escH(f.prompt)}</textarea>
+      </div>
+      <div class="row" style="grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between">
+        <div style="font-size:12px;color:var(--ink-3);font-family:var(--font-mono)">type=${f.type} · temp=${f.temperature}</div>
+        <button class="btn primary" data-act="bench-sweep-start" ${live ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>${live ? 'Running…' : 'Start sweep'}</button>
+      </div>
+    </div>
+    ${live ? renderLivePanel(live) : ''}
+  `;
+}
+
+function renderLivePanel(live) {
+  if (live.kind === 'stress') {
+    const pct = live.total ? Math.round(100 * live.completed / live.total) : 0;
+    return `
+      <div style="margin-top:14px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-family:var(--font-display);font-weight:600;font-size:14px">Stress in progress</div>
+          <button class="btn destructive" data-act="bench-abort">${Icon?.x || '×'} Abort</button>
+        </div>
+        <div style="height:6px;background:var(--ground);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--blue);transition:width 0.3s"></div>
+        </div>
+        <div style="display:flex;gap:18px;font-family:var(--font-mono);font-size:11px;color:var(--ink-2);margin-top:8px">
+          <span>${live.completed}/${live.total} done · ${live.inFlight} in-flight · ${pct}%</span>
+          <span>${live.items?.length || 0} items captured</span>
+        </div>
+        ${live.record ? renderStressResult(live.record) : ''}
+      </div>`;
+  }
+  // sweep
+  const runs = live.runs || [];
+  return `
+    <div style="margin-top:14px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px">Sweep in progress — run ${live.currentRunIdx + 1 || '?'}/${live.runCount || '?'}</div>
+        <button class="btn destructive" data-act="bench-abort">${Icon?.x || '×'} Abort</button>
+      </div>
+      ${live.currentRun ? `
+        <div style="font-size:12px;color:var(--ink-2);margin:6px 0">Current: ${escH(live.currentRun.label)} (c=${live.currentRun.config?.concurrency}, n=${live.currentRun.config?.total})</div>
+        <div style="height:5px;background:var(--ground);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${live.total ? Math.round(100 * live.completed / live.total) : 0}%;background:var(--blue);transition:width 0.3s"></div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:4px">${live.completed || 0}/${live.total || 0}</div>
+      ` : ''}
+      ${runs.length > 0 ? `<div style="margin-top:12px">${renderSweepComparison({ comparison: runs.map(r => r.comparison || compareFromRecord(r.record)) })}</div>` : ''}
+      ${live.record ? renderSweepResult(live.record) : ''}
+    </div>`;
+}
+
+function compareFromRecord(r) {
+  if (!r) return null;
+  const a = r.aggregate;
+  return {
+    label: r.label || '—',
+    concurrency: r.config?.concurrency, total: r.config?.total,
+    wallSec: r.wallSec, success: a?.success, failed: a?.failed,
+    aggTps: a?.aggregateTokPerSec,
+    ttftP50: a?.ttft?.p50, ttftP90: a?.ttft?.p90,
+    totalP50: a?.totalTime?.p50,
+    speedP50: a?.speedPerReq?.p50,
+  };
+}
+
+function fmtN(n, u = 's', d = 2) {
+  if (n == null || isNaN(n)) return '—';
+  return `${Number(n).toFixed(d)}${u}`;
+}
+
+function renderStressResult(r) {
+  const a = r.aggregate;
+  if (!a) return '';
+  return `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:8px">Done — ${a.success}/${a.total} success · ${fmtN(a.aggregateTokPerSec, ' tk/s', 1)} agg</div>
+      <table style="width:100%;font-family:var(--font-mono);font-size:11px;border-collapse:collapse">
+        <thead><tr style="background:var(--surface-2);text-align:left">
+          <th style="padding:6px">Metric</th><th>P50</th><th>P90</th><th>P95</th><th>P99</th><th>min</th><th>max</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:6px">TTFT</td><td>${fmtN(a.ttft.p50)}</td><td>${fmtN(a.ttft.p90)}</td><td>${fmtN(a.ttft.p95)}</td><td>${fmtN(a.ttft.p99)}</td><td>${fmtN(a.ttft.min)}</td><td>${fmtN(a.ttft.max)}</td></tr>
+          <tr><td style="padding:6px">Total</td><td>${fmtN(a.totalTime.p50)}</td><td>${fmtN(a.totalTime.p90)}</td><td>${fmtN(a.totalTime.p95)}</td><td>${fmtN(a.totalTime.p99)}</td><td>${fmtN(a.totalTime.min)}</td><td>${fmtN(a.totalTime.max)}</td></tr>
+          <tr><td style="padding:6px">Speed/req</td><td>${fmtN(a.speedPerReq.p50, ' tk/s', 1)}</td><td>${fmtN(a.speedPerReq.p90, ' tk/s', 1)}</td><td>—</td><td>—</td><td>${fmtN(a.speedPerReq.min, ' tk/s', 1)}</td><td>${fmtN(a.speedPerReq.max, ' tk/s', 1)}</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px"><a href="${mdUrl('stress', r.id)}" target="_blank" style="font-size:12px;color:var(--blue-deep);text-decoration:underline">Open markdown report</a></div>
+    </div>`;
+}
+
+function mdUrl(kind, id) {
+  const tok = getTok();
+  const path = `/admin/bench/${kind}/runs/${encodeURIComponent(id)}/markdown`;
+  return tok ? `${path}?token=${encodeURIComponent(tok)}` : path;
+}
+
+function renderSweepResult(s) {
+  return renderSweepComparison(s);
+}
+
+function renderSweepComparison(s) {
+  const rows = s.comparison || [];
+  if (!rows.length) return '';
+  const best = [...rows].sort((a, b) => (b.aggTps || 0) - (a.aggTps || 0))[0];
+  return `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:8px">Comparison</div>
+      <table style="width:100%;font-family:var(--font-mono);font-size:11px;border-collapse:collapse">
+        <thead><tr style="background:var(--surface-2);text-align:left">
+          <th style="padding:6px">#</th><th>Label</th><th>C</th><th>N</th><th>Wall</th><th>OK/Total</th><th>Agg tk/s</th><th>TTFT p50</th><th>Total p50</th><th>Speed p50</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((c, i) => `
+            <tr style="${c === best ? 'background:var(--green-soft)' : ''}">
+              <td style="padding:6px">${i + 1}</td>
+              <td>${escH(c.label)}</td>
+              <td>${c.concurrency}</td>
+              <td>${c.total}</td>
+              <td>${fmtN(c.wallSec, 's', 1)}</td>
+              <td>${c.success}/${(c.success || 0) + (c.failed || 0)}</td>
+              <td><b>${fmtN(c.aggTps, ' tk/s', 1)}</b></td>
+              <td>${fmtN(c.ttftP50)}</td>
+              <td>${fmtN(c.totalP50)}</td>
+              <td>${fmtN(c.speedP50, ' tk/s', 1)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+      ${rows.length > 1 ? `<div style="margin-top:8px;font-size:12px;color:var(--green-deep)">Best: <b>${escH(best.label)}</b> at <b>${fmtN(best.aggTps, ' tk/s', 1)}</b></div>` : ''}
+      ${s.id ? `<div style="margin-top:10px"><a href="${mdUrl('sweep', s.id)}" target="_blank" style="font-size:12px;color:var(--blue-deep);text-decoration:underline">Open markdown report</a></div>` : ''}
+    </div>`;
+}
+
+function clusterOptions(selected) {
+  // Populated from Odysseus's own /admin/clusters list (proxied via
+  // /admin/bench/clusters). Single source of truth — no hardcoding the
+  // ids on this side. We surface every cluster the engine publishes;
+  // disabled ones are marked so the user knows they'll get refused.
+  if (!bench.clusters.length) {
+    return '<option value="">(no clusters published)</option>';
+  }
+  const opts = [];
+  for (const c of bench.clusters) {
+    const label = `${c.id}` +
+      (c.master_ssh ? ` · ${c.master_ssh.replace(/^admin@/, '')}` : '') +
+      ` · ${c.node_count}n` +
+      (c.kind && c.kind !== 'mlx-distributed' ? ` · ${c.kind}` : '') +
+      (c.enabled ? '' : ' · DISABLED');
+    opts.push(`<option value="${escH(c.id)}" ${selected === c.id ? 'selected' : ''}>${escH(label)}</option>`);
+  }
+  return opts.join('');
+}
+
+function stabilityTargetOptions(selected) {
+  // We need the upstream MODEL PATH (e.g. /Volumes/models/odysseus/...)
+  // for /admin/{cluster}/load. The /v1/models response stores it on the
+  // alias entry under x_concrete; the targets endpoint we proxy through
+  // doesn't expose it today, so we let the user paste a path AND offer
+  // pre-fill buttons from the alias list (path-aware ones live there).
+  const opts = ['<option value="">(paste model path below)</option>'];
+  for (const t of bench.targets) {
+    // Skip cloud aliases — they can't be loaded onto a cluster.
+    if (!t.pool) continue;
+    const lbl = `${t.id} · ${t.pool}${t.loaded ? ' · loaded' : ''}`;
+    opts.push(`<option value="${escH(t.id)}" ${selected === t.id ? 'selected' : ''}>${escH(lbl)}</option>`);
+  }
+  return opts.join('');
+}
+
+function renderBenchStability() {
+  const f = bench.form_stability;
+  const live = bench.active?.kind === 'stability' ? bench.active.live : null;
+  const selectedCluster = bench.clusters.find(c => c.id === f.cluster);
+  const maxNodes = selectedCluster?.max_nodes || 1;
+  // Clamp nodes to the selected cluster's ceiling so an old form value
+  // doesn't slip through when the user picks a smaller cluster.
+  if (f.nodes > maxNodes) f.nodes = maxNodes;
+  return `
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px">LOAD → CHAT → UNLOAD loop</div>
+      <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px">Runs the cycle ${f.iterations}× and records per-iteration timing + wired memory + RDMA QPs. Aborts as soon as the cluster ends an iteration in <code>degraded</code> state — that's the JACCL reset signal.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="row">
+          <div class="label">Cluster</div>
+          <select data-act="bench-form" data-form="stability" data-field="cluster">${clusterOptions(f.cluster)}</select>
+        </div>
+        <div class="row">
+          <div class="label">Nodes (1–${maxNodes})</div>
+          <input class="text" data-act="bench-form" data-form="stability" data-field="nodes" type="number" min="1" max="${maxNodes}" value="${f.nodes}"/>
+        </div>
+        <div class="row" style="grid-column:1 / -1">
+          <div class="label">Model path (the upstream concrete path, not an alias)</div>
+          <input class="text" data-act="bench-form" data-form="stability" data-field="model" value="${escH(f.model)}" placeholder="/Volumes/models/odysseus/inferencerlabs/Hy3-preview-MLX-9bit"/>
+        </div>
+        <div class="row">
+          <div class="label">Iterations</div>
+          <input class="text" data-act="bench-form" data-form="stability" data-field="iterations" type="number" min="1" max="200" value="${f.iterations}"/>
+        </div>
+        <div class="row">
+          <div class="label">Max tokens per chat</div>
+          <input class="text" data-act="bench-form" data-form="stability" data-field="maxTokens" type="number" min="1" max="32000" value="${f.maxTokens}"/>
+        </div>
+        <div class="row" style="grid-column:1 / -1">
+          <div class="label">Chat prompt</div>
+          <textarea data-act="bench-form" data-form="stability" data-field="prompt" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px;resize:vertical">${escH(f.prompt)}</textarea>
+        </div>
+        <div class="row" style="grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;color:var(--ink-3);font-family:var(--font-mono)">cluster=${f.cluster} · nodes=${f.nodes} · iters=${f.iterations}</div>
+          <button class="btn primary" data-act="bench-stability-start" ${live ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>${live ? 'Running…' : 'Start stability'}</button>
+        </div>
+      </div>
+    </div>
+    ${live ? renderStabilityLivePanel(live) : ''}
+  `;
+}
+
+function renderStabilityLivePanel(live) {
+  const pct = live.total ? Math.round(100 * live.completed / live.total) : 0;
+  const iters = live.iterations || [];
+  // Detect anomalies inline so the user sees something is wrong before
+  // the final summary lands.
+  const failed_load = iters.filter(r => r.load && !r.load.ok).length;
+  const failed_chat = iters.filter(r => r.chat && !r.chat.ok).length;
+  const sweep_warn = iters.filter(r => (r.unload?.sweep_warnings || []).length > 0).length;
+  return `
+    <div style="margin-top:14px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px">Stability in progress${live.currentIter ? ` — iter ${live.currentIter}/${live.total}` : ''}</div>
+        <button class="btn destructive" data-act="bench-abort">${Icon?.x || '×'} Abort</button>
+      </div>
+      <div style="height:6px;background:var(--ground);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--blue);transition:width 0.3s"></div>
+      </div>
+      <div style="display:flex;gap:18px;font-family:var(--font-mono);font-size:11px;color:var(--ink-2);margin-top:8px">
+        <span>${live.completed}/${live.total} iter · ${pct}%</span>
+        <span style="color:${failed_load ? 'var(--rust)' : 'var(--ink-3)'}">load fail: ${failed_load}</span>
+        <span style="color:${failed_chat ? 'var(--rust)' : 'var(--ink-3)'}">chat fail: ${failed_chat}</span>
+        <span style="color:${sweep_warn ? 'var(--rust)' : 'var(--ink-3)'}">sweep warn: ${sweep_warn}</span>
+      </div>
+      ${iters.length ? renderStabilityIterTable(iters) : ''}
+      ${live.record ? renderStabilityResult(live.record) : ''}
+    </div>`;
+}
+
+function renderStabilityIterTable(iters) {
+  return `
+    <table style="width:100%;font-family:var(--font-mono);font-size:11px;border-collapse:collapse;margin-top:10px">
+      <thead><tr style="background:var(--surface-2);text-align:left">
+        <th style="padding:6px">#</th><th>load_s</th><th>chat_s</th><th>unload_s</th><th>sweep warn</th><th>degraded</th>
+      </tr></thead>
+      <tbody>
+        ${iters.map(r => `
+          <tr>
+            <td style="padding:6px">${r.iteration}</td>
+            <td>${fmtN(r.load?.elapsed_s, 's', 2)}</td>
+            <td>${fmtN(r.chat?.elapsed_s, 's', 2)}</td>
+            <td>${fmtN(r.unload?.elapsed_s, 's', 2)}</td>
+            <td>${(r.unload?.sweep_warnings || []).length}</td>
+            <td>${r.degraded_after ? '<span style="color:var(--rust)">yes</span>' : 'no'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderStabilityResult(r) {
+  const a = r.aggregate || {};
+  const allGreen = a.load_success_rate === 1 && a.chat_success_rate === 1 &&
+                   a.unload_success_rate === 1 && !a.iterations_with_sweep_warnings;
+  return `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft)">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:8px">
+        Done — ${allGreen ? '<span style="color:var(--green-deep)">all green</span>' : '<span style="color:var(--rust)">anomalies</span>'} · wall ${fmtN(r.wallSec, 's', 1)}
+      </div>
+      <table style="width:100%;font-family:var(--font-mono);font-size:11px;border-collapse:collapse">
+        <thead><tr style="background:var(--surface-2);text-align:left">
+          <th style="padding:6px">Phase</th><th>Success rate</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:6px">Load</td><td>${(a.load_success_rate * 100).toFixed(1)}%</td></tr>
+          <tr><td style="padding:6px">Chat</td><td>${(a.chat_success_rate * 100).toFixed(1)}%</td></tr>
+          <tr><td style="padding:6px">Unload</td><td>${(a.unload_success_rate * 100).toFixed(1)}%</td></tr>
+          <tr><td style="padding:6px">Iters with sweep warning</td><td>${a.iterations_with_sweep_warnings || 0}</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px"><a href="${mdUrl('stability', r.id)}" target="_blank" style="font-size:12px;color:var(--blue-deep);text-decoration:underline">Open markdown report</a></div>
+    </div>`;
+}
+
+function fmtUptime(s) {
+  if (s == null || isNaN(s)) return '—';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  return [h, m, sec].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function fmtCount(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString();
+}
+
+function renderBenchEndurance() {
+  const f = bench.form_endurance;
+  const live = bench.active?.kind === 'endurance' ? bench.active.live : null;
+  const running = !!live && !live.record;
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px">
+      <div class="row">
+        <div class="label">Model</div>
+        <select data-act="bench-form" data-form="endurance" data-field="model">${modelOptions(f.model)}</select>
+      </div>
+      <div class="row">
+        <div class="label">Concurrency</div>
+        <input class="text" data-act="bench-form" data-form="endurance" data-field="concurrency" type="number" min="1" max="64" value="${f.concurrency}"/>
+      </div>
+      <div class="row">
+        <div class="label">Max tokens</div>
+        <input class="text" data-act="bench-form" data-form="endurance" data-field="maxTokens" type="number" min="1" max="32000" value="${f.maxTokens}"/>
+      </div>
+      <div class="row" style="justify-content:flex-end;flex-direction:row;align-items:flex-end">
+        ${running
+          ? `<button class="btn destructive" data-act="bench-endurance-stop">&#9632; Stop</button>`
+          : `<button class="btn primary" data-act="bench-endurance-start">&#9654; Start endurance</button>`}
+      </div>
+      <div class="row" style="grid-column:1 / -1">
+        <div class="label">Prompt</div>
+        <textarea data-act="bench-form" data-form="endurance" data-field="prompt" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px;resize:vertical">${escH(f.prompt)}</textarea>
+      </div>
+    </div>
+    ${live ? renderEnduranceLive(live) : ''}
+  `;
+}
+
+function renderEnduranceLive(live) {
+  const stopped = !!live.record;
+  const r = live.record || live;
+  const headerColor = stopped ? 'var(--ink)' : 'var(--blue-deep)';
+  const statBox = (label, value) => `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:14px 18px;background:var(--surface-2);border-radius:8px;min-width:110px">
+      <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--ink)">${value}</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-3);margin-top:4px">${label}</div>
+    </div>`;
+  return `
+    <div style="margin-top:14px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-family:var(--font-display);font-weight:600;font-size:14px;color:${headerColor}">${stopped ? 'Endurance stopped' : 'Endurance running…'}</div>
+          <div style="font-size:11px;font-family:var(--font-mono);color:var(--ink-3);margin-top:3px">
+            Started ${escH(live.startedAt || r.startedAt || '—')}
+            ${stopped && r.stoppedAt ? ' · Stopped ' + escH(r.stoppedAt) : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${stopped ? '' : `<button class="btn destructive" data-act="bench-endurance-stop">&#9632; Stop</button>`}
+          <button class="btn" data-act="bench-endurance-dismiss" style="font-size:11px;color:var(--ink-3)">Dismiss</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${statBox('Uptime', fmtUptime(r.uptimeSec))}
+        ${statBox('Inferences', fmtCount(r.inferences))}
+        ${statBox('Tokens sent', fmtCount(r.promptTokens))}
+        ${statBox('Tokens recv', fmtCount(r.completionTokens))}
+        ${statBox('Total tokens', fmtCount(r.totalTokens))}
+        ${statBox('tk/s', r.tkPerSec != null ? r.tkPerSec.toFixed(1) : (r.avgTkPerSec != null ? r.avgTkPerSec.toFixed(1) : '—'))}
+        ${statBox('Errors', r.errors || 0)}
+      </div>
+      ${(bench.active?.samples?.length >= 1) ? `
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-3);margin-bottom:6px">tk/s over time (1 point / min)</div>
+          <canvas id="endurance-chart" style="width:100%;height:120px;display:block"></canvas>
+        </div>` : ''}
+    </div>`;
+}
+
+function renderBenchHistory() {
+  const stressList = bench.stress_history || [];
+  const sweepList = bench.sweep_history || [];
+  const stabilityList = bench.stability_history || [];
+  const enduranceList = bench.endurance_history || [];
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:10px">Stress runs (${stressList.length})</div>
+        ${stressList.length === 0 ? '<div class="empty">No stress runs yet.</div>' :
+          stressList.map(r => `
+            <div style="padding:10px 0;border-top:1px solid var(--line-soft);font-size:12px;font-family:var(--font-mono)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span>${escH(new Date(r.startedAt).toLocaleString())}</span>
+                <span style="display:flex;gap:6px">
+                  <a href="/admin/bench/stress/runs/${escH(r.id)}/markdown" target="_blank" class="btn" style="padding:3px 8px;font-size:11px">md</a>
+                  <button class="btn destructive" style="padding:3px 8px;font-size:11px" data-act="bench-delete-stress" data-id="${escH(r.id)}">×</button>
+                </span>
+              </div>
+              <div style="color:var(--ink-2);margin-top:3px">${escH((r.config?.models || []).map(m => (r.config?.modelLabels?.[m]) || m.split('/').pop()).join(', '))} · c=${r.config?.concurrency} n=${r.config?.total}</div>
+              <div style="color:var(--ink-3)">${r.summary?.success}/${r.summary?.total} OK · ${fmtN(r.summary?.aggTps, ' tk/s', 1)} agg · TTFT p50 ${fmtN(r.summary?.ttftP50)}${r.aborted ? ' · ABORTED' : ''}</div>
+            </div>`).join('')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:10px">Sweep runs (${sweepList.length})</div>
+        ${sweepList.length === 0 ? '<div class="empty">No sweep runs yet.</div>' :
+          sweepList.map(s => `
+            <div style="padding:10px 0;border-top:1px solid var(--line-soft);font-size:12px;font-family:var(--font-mono)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span>${escH(new Date(s.startedAt).toLocaleString())} · ${escH(s.type)}</span>
+                <span style="display:flex;gap:6px">
+                  <a href="/admin/bench/sweep/runs/${escH(s.id)}/markdown" target="_blank" class="btn" style="padding:3px 8px;font-size:11px">md</a>
+                  <button class="btn destructive" style="padding:3px 8px;font-size:11px" data-act="bench-delete-sweep" data-id="${escH(s.id)}">×</button>
+                </span>
+              </div>
+              <div style="color:var(--ink-2);margin-top:3px">${escH((s.baseConfig?.models || []).map(m => (s.baseConfig?.modelLabels?.[m]) || m.split('/').pop()).join(', '))} · ${s.runCount} runs</div>
+              <div style="color:var(--ink-3)">best ${fmtN(s.aggBestTps, ' tk/s', 1)} · worst ${fmtN(s.aggWorstTps, ' tk/s', 1)}${s.aborted ? ' · ABORTED' : ''}</div>
+            </div>`).join('')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:10px">Stability runs (${stabilityList.length})</div>
+        ${stabilityList.length === 0 ? '<div class="empty">No stability runs yet.</div>' :
+          stabilityList.map(r => {
+            const allGreen = r.load_success_rate === 1 && r.chat_success_rate === 1 && r.unload_success_rate === 1 && !r.iterations_with_sweep_warnings;
+            const modelShort = (r.model || '').split('/').pop();
+            return `
+            <div style="padding:10px 0;border-top:1px solid var(--line-soft);font-size:12px;font-family:var(--font-mono)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span>${escH(new Date(r.startedAt).toLocaleString())}</span>
+                <span style="display:flex;gap:6px">
+                  <a href="/admin/bench/stability/runs/${escH(r.id)}/markdown" target="_blank" class="btn" style="padding:3px 8px;font-size:11px">md</a>
+                  <button class="btn destructive" style="padding:3px 8px;font-size:11px" data-act="bench-delete-stability" data-id="${escH(r.id)}">×</button>
+                </span>
+              </div>
+              <div style="color:var(--ink-2);margin-top:3px">${escH(modelShort)} · ${escH(r.cluster)} ×${r.nodes}</div>
+              <div style="color:var(--ink-3)">
+                ${r.iterations_completed}/${r.iterations_total} iter ·
+                ${allGreen ? '<span style="color:var(--green-deep)">all green</span>' :
+                  `<span style="color:var(--rust)">L ${((r.load_success_rate||0)*100).toFixed(0)}% / C ${((r.chat_success_rate||0)*100).toFixed(0)}% / U ${((r.unload_success_rate||0)*100).toFixed(0)}% / warn ${r.iterations_with_sweep_warnings||0}</span>`}
+                ${r.aborted_degraded ? ' · DEGRADED' : ''}${r.aborted_user ? ' · ABORTED' : ''}
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:10px">Endurance runs (${enduranceList.length})</div>
+        ${enduranceList.length === 0 ? '<div class="empty">No endurance runs yet.</div>' :
+          enduranceList.map(r => `
+            <div style="padding:10px 0;border-top:1px solid var(--line-soft);font-size:12px;font-family:var(--font-mono)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span>${escH(new Date(r.startedAt).toLocaleString())}</span>
+                <button class="btn destructive" style="padding:3px 8px;font-size:11px" data-act="bench-delete-endurance" data-id="${escH(r.id)}">×</button>
+              </div>
+              <div style="color:var(--ink-2);margin-top:3px">${escH(r.config?.model || '—')} · c=${r.config?.concurrency}</div>
+              <div style="color:var(--ink-3)">${fmtUptime(r.uptimeSec)} · ${fmtCount(r.inferences)} inf · ${fmtCount(r.totalTokens)} tok · ${r.avgTkPerSec?.toFixed(1)} tk/s${r.errors ? ' · ' + r.errors + ' err' : ''}</div>
+            </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+async function handleBenchAct(e) {
+  const el = e.currentTarget;
+  const act = el.dataset.act;
+
+  if (act === 'bench-toggle') {
+    bench.mode = el.dataset.mode;
+    if (bench.mode === 'history') loadBenchData();
+    renderBench();
+    return;
+  }
+  if (act === 'bench-form') {
+    const f = bench['form_' + el.dataset.form];
+    const field = el.dataset.field;
+    const v = el.value;
+    f[field] = ['concurrency','total','maxTokens','repeats','totalPerRun','iterations','nodes'].includes(field) ? parseInt(v) || 0 : v;
+    if (el.tagName === 'SELECT') renderBench();
+    return;
+  }
+  if (act === 'bench-stress-start') {
+    const f = bench.form_stress;
+    const body = {
+      models: f.models.split(',').map(s => s.trim()).filter(Boolean),
+      concurrency: f.concurrency, total: f.total,
+      prompt: f.prompt, maxTokens: f.maxTokens, temperature: f.temperature,
+    };
+    if (!body.models.length) { toast('Pick a model first', 'err'); return; }
+    try {
+      const r = await postJ('/admin/bench/stress', body);
+      bench.active = {
+        id: r.runId, kind: 'stress',
+        live: { kind: 'stress', completed: 0, total: f.total, inFlight: 0, items: [] },
+      };
+      renderBench();
+      attachStressSSE(r.runId);
+    } catch (err) { toast('start failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-sweep-start') {
+    const f = bench.form_sweep;
+    const body = {
+      type: f.type,
+      models: f.models.split(',').map(s => s.trim()).filter(Boolean),
+      prompt: f.prompt, maxTokens: f.maxTokens, temperature: f.temperature,
+      total: f.total, concurrency: 2,
+    };
+    if (!body.models.length) { toast('Pick a model first', 'err'); return; }
+    if (f.type === 'concurrency') {
+      body.values = f.values.split(',').map(s => parseInt(s.trim())).filter(n => n > 0);
+      if (f.totalPerRun) body.totalPerRun = f.totalPerRun;
+    } else if (f.type === 'repeat') {
+      body.repeats = f.repeats;
+    }
+    try {
+      const r = await postJ('/admin/bench/sweep', body);
+      bench.active = {
+        id: r.sweepId, kind: 'sweep',
+        live: { kind: 'sweep', runs: [] },
+      };
+      renderBench();
+      attachSweepSSE(r.sweepId);
+    } catch (err) { toast('start failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-stability-start') {
+    const f = bench.form_stability;
+    if (!f.model) { toast('Paste a model path first', 'err'); return; }
+    if (!f.iterations || f.iterations < 1) { toast('Iterations must be ≥ 1', 'err'); return; }
+    const body = {
+      cluster: f.cluster, model: f.model, nodes: f.nodes,
+      iterations: f.iterations, prompt: f.prompt, maxTokens: f.maxTokens,
+    };
+    try {
+      const r = await postJ('/admin/bench/stability', body);
+      bench.active = {
+        id: r.runId, kind: 'stability',
+        live: {
+          kind: 'stability', completed: 0, total: f.iterations,
+          currentIter: 0, iterations: [],
+        },
+      };
+      renderBench();
+      attachStabilitySSE(r.runId);
+    } catch (err) { toast('start failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-endurance-start') {
+    const f = bench.form_endurance;
+    if (!f.model) { toast('Pick a model first', 'err'); return; }
+    const body = {
+      model: f.model, concurrency: f.concurrency,
+      prompt: f.prompt, maxTokens: f.maxTokens, temperature: f.temperature,
+    };
+    try {
+      const r = await postJ('/admin/bench/endurance', body);
+      bench.active = {
+        id: r.runId, kind: 'endurance',
+        live: { kind: 'endurance', startedAt: null, inferences: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0, tkPerSec: 0, uptimeSec: 0, errors: 0 },
+        samples: [],
+      };
+      renderBench();
+      attachEnduranceSSE(r.runId);
+    } catch (err) { toast('start failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-endurance-stop') {
+    if (!bench.active || bench.active.kind !== 'endurance') return;
+    try { await postJ(`/admin/bench/endurance/${bench.active.id}/stop`); toast('stopping…', 'ok'); }
+    catch (err) { toast('stop failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-endurance-dismiss') {
+    bench.active = null;
+    loadBenchData();
+    return;
+  }
+  if (act === 'bench-abort') {
+    if (!bench.active) return;
+    const url = `/admin/bench/${bench.active.kind}/${bench.active.id}/abort`;
+    try { await postJ(url); toast('aborting…', 'ok'); }
+    catch (err) { toast('abort failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-delete-stress') {
+    if (!confirm('Delete this stress run?')) return;
+    try { await fetch(`/admin/bench/stress/runs/${el.dataset.id}`, { method: 'DELETE', headers: { ...authH() } }); loadBenchData(); }
+    catch (err) { toast('delete failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-delete-sweep') {
+    if (!confirm('Delete this sweep?')) return;
+    try { await fetch(`/admin/bench/sweep/runs/${el.dataset.id}`, { method: 'DELETE', headers: { ...authH() } }); loadBenchData(); }
+    catch (err) { toast('delete failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-delete-stability') {
+    if (!confirm('Delete this stability run?')) return;
+    try { await fetch(`/admin/bench/stability/runs/${el.dataset.id}`, { method: 'DELETE', headers: { ...authH() } }); loadBenchData(); }
+    catch (err) { toast('delete failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-delete-endurance') {
+    if (!confirm('Delete this endurance run?')) return;
+    try { await fetch(`/admin/bench/endurance/runs/${el.dataset.id}`, { method: 'DELETE', headers: { ...authH() } }); loadBenchData(); }
+    catch (err) { toast('delete failed: ' + err.message, 'err'); }
+    return;
+  }
+}
+
+// All bench SSE events come in on the default `message` channel with
+// `{type, payload}` JSON — keeps the parser robust against EventSource
+// quirks (some browsers don't like colons in event names).
+function attachStressSSE(runId) {
+  const tok = getTok();
+  const url = `/admin/bench/stress/${runId}/stream${tok ? '?token=' + encodeURIComponent(tok) : ''}`;
+  const es = new EventSource(url);
+  es.onmessage = (e) => {
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    const type = m.type;
+    const d = m.payload || {};
+    const live = bench.active?.live;
+    if (!live) return;
+    if (type === 'progress') {
+      live.completed = d.completed; live.total = d.total; live.inFlight = d.inFlight;
+      renderBench();
+    } else if (type === 'item') {
+      live.items = live.items || []; live.items.push(d.item);
+      renderBench();
+    } else if (type === 'done') {
+      live.record = d.record;
+      renderBench();
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 1000);
+    } else if (type === 'error') {
+      toast('bench error: ' + (d.error || 'unknown'), 'err');
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 500);
+    }
+  };
+  es.onerror = () => { es.close(); bench.active = null; loadBenchData(); };
+}
+
+function attachSweepSSE(sweepId) {
+  const tok = getTok();
+  const url = `/admin/bench/sweep/${sweepId}/stream${tok ? '?token=' + encodeURIComponent(tok) : ''}`;
+  const es = new EventSource(url);
+  es.onmessage = (e) => {
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    const type = m.type;
+    const d = m.payload || {};
+    const live = bench.active?.live;
+    if (!live) return;
+    if (type === 'sweep:start') {
+      live.runCount = d.runCount; live.runs = [];
+      renderBench();
+    } else if (type === 'run:start') {
+      live.currentRunIdx = d.runIdx;
+      live.currentRun = { label: d.label, config: d.config };
+      live.completed = 0; live.total = d.config?.total || 0;
+      renderBench();
+    } else if (type === 'progress') {
+      live.completed = d.completed; live.total = d.total;
+      renderBench();
+    } else if (type === 'run:done') {
+      live.runs = live.runs || [];
+      live.runs.push({ record: d.record, label: d.label });
+      renderBench();
+    } else if (type === 'sweep:done') {
+      live.record = d.sweep;
+      renderBench();
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 1500);
+    } else if (type === 'error') {
+      toast('sweep error: ' + (d.error || 'unknown'), 'err');
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 500);
+    }
+  };
+  es.onerror = () => { es.close(); bench.active = null; loadBenchData(); };
+}
+
+function attachStabilitySSE(runId) {
+  const tok = getTok();
+  const url = `/admin/bench/stability/${runId}/stream${tok ? '?token=' + encodeURIComponent(tok) : ''}`;
+  const es = new EventSource(url);
+  es.onmessage = (e) => {
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    const type = m.type;
+    const d = m.payload || {};
+    const live = bench.active?.live;
+    if (!live) return;
+    if (type === 'runStart') {
+      live.total = d.total;
+      renderBench();
+    } else if (type === 'iterationStart') {
+      live.currentIter = d.i;
+      live.total = d.total;
+      renderBench();
+    } else if (type === 'iterationDone') {
+      live.iterations = live.iterations || [];
+      live.iterations.push(d.iteration);
+      renderBench();
+    } else if (type === 'progress') {
+      live.completed = d.completed;
+      live.total = d.total;
+      renderBench();
+    } else if (type === 'done') {
+      live.record = d.record;
+      renderBench();
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 1500);
+    } else if (type === 'error') {
+      toast('stability error: ' + (d.error || 'unknown'), 'err');
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 500);
+    }
+  };
+  es.onerror = () => { es.close(); bench.active = null; loadBenchData(); };
+}
+
+function drawEnduranceChart() {
+  const canvas = document.getElementById('endurance-chart');
+  if (!canvas) return;
+  const samples = bench.active?.samples;
+  if (!samples || samples.length < 2) return;
+
+  const W = canvas.clientWidth || 600;
+  const H = 120;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const pad = { top: 10, right: 16, bottom: 24, left: 42 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  // Single point — just draw a dot with the value
+  if (samples.length === 1) {
+    const s = samples[0];
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#4285f4';
+    ctx.beginPath();
+    ctx.arc(pad.left + cW / 2, pad.top + cH / 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#555';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${s.tps.toFixed(1)} tk/s`, pad.left + cW / 2, pad.top + cH / 2 - 10);
+    return;
+  }
+
+  const maxTps = Math.max(...samples.map(s => s.tps)) * 1.15 || 1;
+  const t0 = samples[0].t;
+  const tRange = (samples[samples.length - 1].t - t0) || 1;
+  const xOf = t => pad.left + ((t - t0) / tRange) * cW;
+  const yOf = v => pad.top + cH - (v / maxTps) * cH;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Y grid + labels
+  ctx.font = `${10 * dpr / dpr}px monospace`;
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 3; i++) {
+    const y = pad.top + (i / 3) * cH;
+    const v = maxTps * (1 - i / 3);
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+    ctx.fillStyle = '#999';
+    ctx.fillText(v.toFixed(1), pad.left - 4, y + 3);
+  }
+
+  // X time labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#999';
+  const labelCount = Math.min(6, samples.length);
+  const step = Math.max(1, Math.floor(samples.length / labelCount));
+  for (let i = 0; i < samples.length; i += step) {
+    const elapsed = samples[i].t - t0;
+    const lbl = elapsed < 3600 ? `${Math.floor(elapsed / 60)}m` : `${(elapsed / 3600).toFixed(1)}h`;
+    ctx.fillText(lbl, xOf(samples[i].t), H - 6);
+  }
+
+  // Fill under line
+  ctx.beginPath();
+  ctx.moveTo(xOf(samples[0].t), yOf(0));
+  samples.forEach(s => ctx.lineTo(xOf(s.t), yOf(s.tps)));
+  ctx.lineTo(xOf(samples[samples.length - 1].t), yOf(0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(66,133,244,0.10)';
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xOf(samples[0].t), yOf(samples[0].tps));
+  samples.forEach(s => ctx.lineTo(xOf(s.t), yOf(s.tps)));
+  ctx.strokeStyle = 'rgba(66,133,244,0.85)';
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Last dot
+  const last = samples[samples.length - 1];
+  ctx.beginPath();
+  ctx.arc(xOf(last.t), yOf(last.tps), 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#4285f4';
+  ctx.fill();
+}
+
+function attachEnduranceSSE(runId) {
+  // Fetch existing samples immediately (handles page reload mid-run)
+  getJ(`/admin/bench/endurance/${runId}/samples`).then(r => {
+    if (bench.active) {
+      bench.active.samples = r.data || [];
+      if (bench.mode === 'endurance') { renderBench(); requestAnimationFrame(drawEnduranceChart); }
+    }
+  }).catch(() => {});
+
+  const tok = getTok();
+  const url = `/admin/bench/endurance/${runId}/stream${tok ? '?token=' + encodeURIComponent(tok) : ''}`;
+  const es = new EventSource(url);
+  es.onmessage = (e) => {
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    const type = m.type;
+    const d = m.payload || {};
+    const live = bench.active?.live;
+    if (!live) return;
+    if (type === 'start') {
+      live.startedAt = d.startedAt;
+      renderBench();
+    } else if (type === 'tick') {
+      live.inferences = d.inferences;
+      live.promptTokens = d.promptTokens;
+      live.completionTokens = d.completionTokens;
+      live.totalTokens = d.totalTokens;
+      live.tkPerSec = d.tkPerSec;
+      live.uptimeSec = d.uptimeSec;
+      live.errors = d.errors;
+      renderBench();
+    } else if (type === 'sample') {
+      if (bench.active) {
+        bench.active.samples = bench.active.samples || [];
+        bench.active.samples.push(d);
+        if (bench.mode === 'endurance') { renderBench(); requestAnimationFrame(drawEnduranceChart); }
+      }
+    } else if (type === 'done') {
+      live.record = d.record;
+      renderBench();
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 2000);
+    } else if (type === 'error') {
+      toast('endurance error: ' + (d.error || 'unknown'), 'err');
+      es.close();
+      setTimeout(() => { bench.active = null; loadBenchData(); }, 500);
+    }
+  };
+  es.onerror = () => { es.close(); bench.active = null; loadBenchData(); };
+}
+
+// Tiny CSS additions for the bench form
+const benchStyles = document.createElement('style');
+benchStyles.textContent = `
+  #bench-body .row { display: flex; flex-direction: column; gap: 6px; }
+  #bench-body .row .label { font-size: 11px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.04em; text-transform: uppercase; }
+  #bench-body select, #bench-body input.text, #bench-body textarea {
+    padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--surface); color: var(--ink); font-size: 13px; outline: none; width: 100%;
+  }
+  #bench-body select { font-family: var(--font-mono); font-size: 12px; }
+  #bench-body input.text { font-family: var(--font-mono); }
+  #bench-body select:focus, #bench-body input.text:focus, #bench-body textarea:focus { border-color: var(--blue); }
+  #bench-body .empty { font-style: italic; color: var(--ink-3); font-size: 12px; padding: 20px 0; text-align: center; }
+  #bench-body .btn.destructive { color: var(--rust); border-color: var(--rust); background: transparent; }
+  #bench-body table th, #bench-body table td { padding: 6px 8px; border-bottom: 1px solid var(--line-soft); }
+`;
+document.head.appendChild(benchStyles);
+
+// Shim if Icon isn't defined here
+const Icon = { x: '×' };
+
+loadBenchData();
+</script>
+</body>
+</html>

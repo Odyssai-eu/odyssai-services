@@ -1,0 +1,23 @@
+services:
+  services:
+    build: .
+    image: odyssai-services:latest
+    container_name: odyssai-services
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    # No auth by default — LAN-only internal cockpit. Set
+    # ODYSSAI_SERVICES_TOKEN if you want to require Bearer on /admin/* (e.g.
+    # if you ever expose the dashboard through a Cloudflare tunnel).
+    environment:
+      ODYSSAI_SERVICES_TOKEN: ${ODYSSAI_SERVICES_TOKEN:-}
+      ODYSSAI_ENGINE_URL: http://192.168.86.39:8000
+    volumes:
+      # SSH keys for managing ultra-96A and max-64
+      - ${HOME}/.ssh:/root/.ssh:ro
+      # Persisted bench history + future state
+      - odyssai-services-data:/app/data
+    network_mode: bridge
+
+volumes:
+  odyssai-services-data:
