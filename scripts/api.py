@@ -389,6 +389,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Odyssai Services (odyssai.eu)", lifespan=lifespan)
 
+# Document Producer (mirror of the Docling parser): renders model output —
+# markdown -> real .docx (pandoc), JSON spec -> .xlsx (openpyxl) — under
+# /render/*. Optional import so the sidecar still boots if the render deps
+# aren't present in a given environment.
+try:
+    from render import build_router as _build_render_router
+    app.include_router(_build_render_router())
+except Exception as _render_err:  # pragma: no cover
+    import sys as _sys
+    _sys.stderr.write(f"[render] router not mounted ({_render_err})\n")
+
 
 @app.middleware("http")
 async def _admin_token_middleware(request: Request, call_next):
