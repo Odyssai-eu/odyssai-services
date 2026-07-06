@@ -166,12 +166,8 @@ def spec_to_xlsx(spec: dict[str, Any]) -> bytes:
 # FastAPI router (mounted by odyssai-services api.py)
 # ──────────────────────────────────────────────────────────────────────────────
 
-def build_router():
-    from fastapi import APIRouter, HTTPException
-    from fastapi.responses import Response
+try:
     from pydantic import BaseModel
-
-    router = APIRouter(prefix="/render", tags=["render"])
 
     class DocxReq(BaseModel):
         markdown: str
@@ -181,6 +177,20 @@ def build_router():
     class XlsxReq(BaseModel):
         spec: dict
         filename: str = "workbook.xlsx"
+except Exception:  # pydantic absent in a non-serving env
+    DocxReq = XlsxReq = None  # type: ignore
+
+
+def build_router():
+    # Request models MUST live at MODULE level (above), not inside this
+    # closure: FastAPI resolves endpoint type-hints via the module globals,
+    # and a class defined in the closure is invisible there -> the param is
+    # mistaken for a query field (HTTP 422 "req required in query"). Learned
+    # the hard way on the first live deploy.
+    from fastapi import APIRouter, HTTPException
+    from fastapi.responses import Response
+
+    router = APIRouter(prefix="/render", tags=["render"])
 
     @router.get("/health")
     def health():
