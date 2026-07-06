@@ -141,13 +141,14 @@ select:focus, input.text:focus { border-color: var(--blue); }
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div>
         <div style="font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink)">Bench</div>
-        <div style="font-size:12px;color:var(--ink-2);margin-top:2px">Stress + Sweep + Stability against the Odysseus engine. Internal tool — finds when things break.</div>
+        <div style="font-size:12px;color:var(--ink-2);margin-top:2px">Stress + Sweep + Stability + Directed against the Odysseus engine. Internal tool — finds when things break.</div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn" data-act="bench-toggle" data-mode="stress">Stress</button>
         <button class="btn" data-act="bench-toggle" data-mode="sweep">Sweep</button>
         <button class="btn" data-act="bench-toggle" data-mode="stability">Stability</button>
         <button class="btn" data-act="bench-toggle" data-mode="endurance">Endurance</button>
+        <button class="btn" data-act="bench-toggle" data-mode="directed">Directed</button>
         <button class="btn" data-act="bench-toggle" data-mode="history">History</button>
       </div>
     </div>
@@ -393,7 +394,8 @@ const bench = {
   sweep_history: [],
   stability_history: [],
   endurance_history: [],
-  active: null,                         // { id, kind: 'stress'|'sweep'|'stability'|'endurance', live: {...} }
+  directed_history: [],
+  active: null,                         // { id, kind: 'stress'|'sweep'|'stability'|'endurance'|'directed', live: {...} }
   form_stress: {
     models: '', concurrency: 4, total: 20,
     prompt: 'Tell me about the ocean in three sentences.',
@@ -418,6 +420,13 @@ const bench = {
     cluster: '', model: '', nodes: 2, iterations: 5,
     prompt: 'Write a short haiku about a Mac Studio cluster.',
     maxTokens: 200,
+  },
+  form_directed: {
+    test_repo: '/Volumes/ext_512/workplace/benchs/bench test',
+    model: '',
+    maxTokens: 1024,
+    temperature: 0.0,
+    concurrency: 1,
   },
 };
 
@@ -449,19 +458,24 @@ async function loadBenchData() {
           bench.active = { id: runId, kind: 'stability', live: { kind: 'stability', completed: 0, total: 0, currentIter: 0, iterations: [] } };
           bench.mode = 'stability';
           attachStabilitySSE(runId);
+        } else if (kind === 'directed') {
+          bench.active = { id: runId, kind: 'directed', live: { kind: 'directed', completed: 0, total: 0, items: [] } };
+          bench.mode = 'directed';
+          attachDirectedSSE(runId);
         }
       }
     } catch (_) {}
   }
 
   try {
-    const [t, c, sh, swh, stbh, endh] = await Promise.all([
+    const [t, c, sh, swh, stbh, endh, dh] = await Promise.all([
       getJ('/admin/bench/targets').catch(() => ({ data: [] })),
       getJ('/admin/bench/clusters').catch(() => ({ data: [] })),
       getJ('/admin/bench/stress/runs').catch(() => ({ data: [] })),
       getJ('/admin/bench/sweep/runs').catch(() => ({ data: [] })),
       getJ('/admin/bench/stability/runs').catch(() => ({ data: [] })),
       getJ('/admin/bench/endurance/runs').catch(() => ({ data: [] })),
+      getJ('/admin/bench/directed/runs').catch(() => ({ data: [] })),
     ]);
     bench.targets = t?.data || [];
     bench.clusters = c?.data || [];
@@ -469,9 +483,11 @@ async function loadBenchData() {
     bench.sweep_history = swh?.data || [];
     bench.stability_history = stbh?.data || [];
     bench.endurance_history = endh?.data || [];
+    bench.directed_history = dh?.data || [];
     if (!bench.form_stress.models && bench.targets.length) bench.form_stress.models = bench.targets[0].id;
     if (!bench.form_sweep.models && bench.targets.length) bench.form_sweep.models = bench.targets[0].id;
     if (!bench.form_endurance.model && bench.targets.length) bench.form_endurance.model = bench.targets[0].id;
+    if (!bench.form_directed.model && bench.targets.length) bench.form_directed.model = bench.targets[0].id;
     // Default stability cluster = first enabled, mlx-distributed (i.e. the
     // ones that actually support /admin/{id}/load and pipeline-parallel —
     // not the direct-vlm VLM "cluster" which doesn't fit the LOAD/UNLOAD loop).
@@ -492,6 +508,7 @@ function renderBench() {
   else if (bench.mode === 'sweep') body.innerHTML = renderBenchSweep();
   else if (bench.mode === 'stability') body.innerHTML = renderBenchStability();
   else if (bench.mode === 'endurance') { body.innerHTML = renderBenchEndurance(); requestAnimationFrame(drawEnduranceChart); }
+  else if (bench.mode === 'directed') body.innerHTML = renderBenchDirected();
   else body.innerHTML = renderBenchHistory();
   // Wire up handlers on the rendered body
   body.querySelectorAll('[data-act]').forEach(el => {
@@ -1173,7 +1190,52 @@ async function handleBenchAct(e) {
   }
   if (act === 'bench-endurance-dismiss') {
     bench.active = null;
-    loadBenchData();
+    renderBench();
+    return;
+  }
+  if (act === 'bench-directed-run') {
+    const f = bench.form_directed;
+    if (!f.test_repo || !f.test_repo.trim()) { toast('Set a test repo path', 'err'); return; }
+    if (!f.model) { toast('Pick a model first', 'err'); return; }
+    const body = {
+      test_repo: f.test_repo.trim(),
+      model: f.model,
+      maxTokens: f.maxTokens,
+      temperature: f.temperature,
+      concurrency: f.concurrency,
+    };
+    try {
+      const r = await postJ('/admin/bench/directed', body);
+      bench.active = {
+        id: r.runId, kind: 'directed',
+        live: { kind: 'directed', model: f.model, testRepo: f.test_repo.trim(),
+                completed: 0, total: 0, inFlight: 0, items: [] },
+      };
+      renderBench();
+      attachDirectedSSE(r.runId);
+    } catch (err) { toast('start failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-directed-abort') {
+    if (!bench.active || bench.active.kind !== 'directed') return;
+    try { await postJ(`/admin/bench/directed/${bench.active.id}/abort`); toast('aborting…', 'ok'); }
+    catch (err) { toast('abort failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-directed-delete') {
+    if (!confirm('Delete this directed run?')) return;
+    try { await fetch(`/admin/bench/directed/runs/${el.dataset.id}`, { method: 'DELETE', headers: { ...authH() } }); loadBenchData(); }
+    catch (err) { toast('delete failed: ' + err.message, 'err'); }
+    return;
+  }
+  if (act === 'bench-directed-view-md') {
+    try {
+      const r = await fetch(`/admin/bench/directed/runs/${el.dataset.id}/markdown`, { headers: { ...authH() } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const md = await r.text();
+      const w = window.open('', '_blank');
+      if (w) { w.document.write('<pre style="font-family:monospace;font-size:12px;padding:20px;white-space:pre-wrap">' + escH(md) + '</pre>'); w.document.title = 'Directed ' + el.dataset.id; }
+    } catch (err) { toast('view failed: ' + err.message, 'err'); }
     return;
   }
   if (act === 'bench-abort') {
@@ -1207,6 +1269,182 @@ async function handleBenchAct(e) {
     catch (err) { toast('delete failed: ' + err.message, 'err'); }
     return;
   }
+}
+// ─── Directed bench ───────────────────────────────────────────────────
+function renderBenchDirected() {
+  const f = bench.form_directed;
+  const isActive = bench.active && bench.active.kind === 'directed';
+
+  if (isActive) {
+    const live = bench.active.live || { completed: 0, total: 0, items: [] };
+    const pct = live.total ? Math.round((live.completed / live.total) * 100) : 0;
+    const itemsHtml = (live.items || []).map(it => {
+      const ok = it.status === 'ok';
+      const status = ok ? '✓' : '✗';
+      const err = it.error ? `<span style="color:var(--ink-3);font-size:11px"> — ${escH(it.error)}</span>` : '';
+      return `<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:12px">
+        <span style="color:${ok ? 'var(--ok)' : 'var(--err)'};width:14px">${status}</span>
+        <span style="width:30px;color:var(--ink-3)">${String(it.index).padStart(2,'0')}.</span>
+        <span style="flex:1">${escH(it.stem)}</span>
+        <span style="color:var(--ink-2)">${it.latencyMs ? Math.round(it.latencyMs) + 'ms' : ''}</span>
+        ${err}
+      </div>`;
+    }).join('');
+    return `
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px">
+        <div>
+          <div class="card" style="padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div>
+                <div style="font-family:var(--font-display);font-size:15px;font-weight:600">Directed run <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">${bench.active.id.slice(0,8)}</span></div>
+                <div style="font-size:12px;color:var(--ink-2);margin-top:2px">${escH(bench.active.live.model || '')} · ${live.completed}/${live.total} (${pct}%)</div>
+              </div>
+              <button class="btn destructive" data-act="bench-directed-abort">&#9632; Abort</button>
+            </div>
+            <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden">
+              <div style="height:100%;background:var(--ink);width:${pct}%;transition:width .3s"></div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px">
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:8px">Prompts</div>
+            ${itemsHtml || '<div style="color:var(--ink-3);font-size:12px">Starting…</div>'}
+          </div>
+        </div>
+        <div>
+          <div class="card" style="padding:14px">
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:8px">Test repo</div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2);word-break:break-all">${escH(bench.active.live.testRepo || f.test_repo)}</div>
+          </div>
+          <div class="card" style="padding:14px;margin-top:10px">
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:8px">Analyse</div>
+            <button class="btn" disabled title="Coming in a future project" style="opacity:.4;cursor:not-allowed;width:100%">Analyse</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Form view (no active run)
+  return `
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px">
+      <div>
+        <div class="card" style="padding:16px">
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:600;margin-bottom:12px">Run directed benchmark</div>
+          <div style="display:grid;gap:10px">
+            <div>
+              <div class="label">Test repo path</div>
+              <input type="text" data-act="bench-form" data-form="directed" data-field="test_repo"
+                value="${escH(f.test_repo)}"
+                style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <div class="label">Max tokens</div>
+                <input type="number" data-act="bench-form" data-form="directed" data-field="maxTokens" value="${f.maxTokens}" min="64" max="32000"
+                  style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px"/>
+              </div>
+              <div>
+                <div class="label">Temperature</div>
+                <input type="number" data-act="bench-form" data-form="directed" data-field="temperature" value="${f.temperature}" step="0.1" min="0" max="2"
+                  style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px"/>
+              </div>
+            </div>
+            <div>
+              <div class="label">Model</div>
+              <select data-act="bench-form" data-form="directed" data-field="model"
+                style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px">
+                ${modelOptions(f.model)}
+              </select>
+            </div>
+            <div>
+              <div class="label">Concurrency</div>
+              <input type="number" data-act="bench-form" data-form="directed" data-field="concurrency" value="${f.concurrency}" min="1" max="16"
+                style="width:120px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--font-mono);font-size:12px"/>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="btn primary" data-act="bench-directed-run">▶ Run</button>
+              <button class="btn" disabled title="Coming in a future project" style="opacity:.4;cursor:not-allowed">Analyse</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:16px;margin-top:14px">
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:10px">History</div>
+          ${bench.directed_history.length === 0
+            ? '<div style="color:var(--ink-3);font-size:12px">No runs yet.</div>'
+            : `<div style="display:flex;flex-direction:column;gap:6px">${bench.directed_history.map(r => {
+                const cfg = r.config || {};
+                const res = r.result || {};
+                return `
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:8px;border:1px solid var(--line)">
+                    <div style="flex:1">
+                      <div style="font-family:var(--font-mono);font-size:12px">${escH(cfg.model || '—')}</div>
+                      <div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3)">${escH(r.startedAt)} · ${res.passed||0}/${res.total||0} passed · ${(r.wallSec||0).toFixed(1)}s</div>
+                    </div>
+                    <button class="btn" data-act="bench-directed-view-md" data-id="${r.id}" style="font-size:11px">MD</button>
+                    <button class="btn destructive" data-act="bench-directed-delete" data-id="${r.id}" style="font-size:11px">×</button>
+                  </div>
+                `;
+              }).join('')}</div>`
+          }
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="padding:14px">
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:8px">Expected structure</div>
+          <pre style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2);white-space:pre-wrap;line-height:1.5">${escH(`{test_repo}/
+  instructions.md   ← system msg
+  prompt/
+    01_*.md
+    02_*.md
+  answer/           ← created
+    {run_id}/
+      {model_slug}/
+        01_*.md
+        _run.json`)}</pre>
+        </div>
+        <div class="card" style="padding:14px;margin-top:10px">
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:600;margin-bottom:8px">Analyse</div>
+          <button class="btn" disabled title="Coming in a future project" style="opacity:.4;cursor:not-allowed;width:100%">Analyse</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachDirectedSSE(runId) {
+  const es = new EventSource(`/admin/bench/directed/${runId}/stream`);
+  es.onmessage = (e) => {
+    let msg; try { msg = JSON.parse(e.data); } catch { return; }
+    const { type, payload } = msg;
+    if (type === 'runStart') {
+      bench.active.live = { ...bench.active.live, ...payload, items: [] };
+      renderBench();
+    } else if (type === 'promptStart') {
+      bench.active.live.currentStem = payload.stem;
+      renderBench();
+    } else if (type === 'promptDone') {
+      bench.active.live.items = bench.active.live.items || [];
+      bench.active.live.items.push(payload);
+      renderBench();
+    } else if (type === 'progress') {
+      bench.active.live.completed = payload.completed;
+      bench.active.live.total = payload.total;
+      bench.active.live.inFlight = payload.inFlight;
+      renderBench();
+    } else if (type === 'runDone') {
+      es.close();
+      bench.active = null;
+      loadBenchData();
+    } else if (type === 'error') {
+      es.close();
+      bench.active = null;
+      toast('Directed run failed: ' + (payload?.error || 'unknown'), 'err');
+      loadBenchData();
+    }
+  };
+  es.onerror = () => { es.close(); };
 }
 
 // All bench SSE events come in on the default `message` channel with

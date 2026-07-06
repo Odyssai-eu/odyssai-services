@@ -610,6 +610,13 @@ from bench_endurance import (
     delete_endurance_run as _bench_delete_endurance,
     get_endurance_samples as _bench_get_endurance_samples,
 )
+from bench_directed import (
+    run_directed as _bench_run_directed,
+    list_directed_history as _bench_list_directed,
+    get_directed_run as _bench_get_directed,
+    delete_directed_run as _bench_delete_directed,
+    directed_run_to_markdown as _bench_directed_md,
+)
 
 # Default engine endpoint (Odysseus on the same host).
 DEFAULT_ENGINE_URL = os.environ.get(
@@ -669,6 +676,18 @@ class BenchSweepRequest(BaseModel):
     repeats: Optional[int] = None         # for type=repeat
     configs: Optional[list[dict]] = None  # for type=custom
     totalPerRun: Optional[int] = None
+    headers: Optional[dict] = None
+
+
+class BenchDirectedRequest(BaseModel):
+    """Directed benchmark — runs an ordered prompt set against one model,
+    persists each answer alongside the prompt set for later analysis."""
+    endpoint: Optional[str] = None       # defaults to DEFAULT_ENGINE_URL
+    model: str                            # alias Odysseus (e.g. or:kimi-k-2.7-code)
+    test_repo: Optional[str] = None       # default ODYSSAI_BENCH_DEFAULT_TEST_REPO
+    maxTokens: int = 1024
+    temperature: float = 0.0
+    concurrency: int = 1
     headers: Optional[dict] = None
 
 
@@ -1138,6 +1157,126 @@ async def admin_bench_endurance_samples(run_id: str):
 @app.delete("/admin/bench/endurance/runs/{run_id}")
 async def admin_bench_endurance_delete(run_id: str):
     if not _bench_delete_endurance(run_id):
+        raise HTTPException(404, f"unknown run {run_id}")
+    return {"ok": True}
+
+
+# ── Directed benchmark endpoints ────────────────────────────────────────
+# Sends an ordered prompt set (from {test_repo}/prompt/) to a single model,
+# persists each answer in {test_repo}/answer/{run_id}/{model_slug}/.
+# Pattern follows stress/stability SSE bridge.
+
+
+@app.post("/admin/bench/directed")
+async def admin_bench_directed(req: BenchDirectedRequest):
+    """Kick off a directed run. Returns {runId, stream}."""
+    if not req.model:
+        raise HTTPException(400, "model required")
+    cfg = {
+        "endpoint": req.endpoint or DEFAULT_ENGINE_URL,
+        "model": req.model,
+        "test_repo": req.test_repo,
+        "maxTokens": req.maxTokens,
+        "temperature": req.temperature,
+        "concurrency": req.concurrency,
+        "headers": req.headers,
+    }
+    # Pre-validate so we surface a clean error before starting the run task
+    from bench_directed import _resolve_test_repo, _validate_test_repo
+    try:
+        _validate_test_repo(_resolve_test_repo(cfg))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    queue: asyncio.Queue = asyncio.Queue()
+    abort = asyncio.Event()
+    emit = _make_event_emitter(queue)
+
+    async def runner():
+        try:
+            record = await _bench_run_directed(cfg, emit, abort)
+            await queue.put(("runDone", {"runId": record["id"], "record": record}))
+        except Exception as e:
+            await queue.put(("error", {"error": str(e)}))
+        finally:
+            await queue.put((None, None))
+
+    task = asyncio.create_task(runner())
+    # The runner emits runStart first — extract run_id from it.
+    first = await asyncio.wait_for(queue.get(), timeout=10.0)
+    run_id = (first[1] or {}).get("runId")
+    if not run_id:
+        raise HTTPException(500, "failed to obtain run_id")
+
+    pre: asyncio.Queue = asyncio.Queue()
+    await pre.put(first)
+
+    async def relay():
+        while True:
+            ev = await queue.get()
+            await pre.put(ev)
+            if ev[0] is None:
+                return
+    asyncio.create_task(relay())
+
+    _bench_active[run_id] = {"queue": pre, "abort": abort,
+                              "kind": "directed", "task": task}
+    return {"runId": run_id, "stream": f"/admin/bench/directed/{run_id}/stream"}
+
+
+@app.get("/admin/bench/directed/{run_id}/stream")
+async def admin_bench_directed_stream(run_id: str):
+    state = _bench_active.get(run_id)
+    if not state:
+        record = _bench_get_directed(run_id)
+        if not record:
+            raise HTTPException(404, f"unknown run {run_id}")
+        async def replay() -> AsyncIterator[bytes]:
+            payload = json.dumps(
+                {"type": "runDone", "payload": {"runId": run_id, "record": record}},
+                default=str,
+            )
+            yield ("data: " + payload + "\n\n").encode()
+        return StreamingResponse(replay(), media_type="text/event-stream")
+    return StreamingResponse(
+        _drain_to_sse(state["queue"], state["abort"]),
+        media_type="text/event-stream",
+    )
+
+
+@app.post("/admin/bench/directed/{run_id}/abort")
+async def admin_bench_directed_abort(run_id: str):
+    state = _bench_active.get(run_id)
+    if not state:
+        raise HTTPException(404, f"unknown run {run_id}")
+    state["abort"].set()
+    return {"ok": True, "aborting": run_id}
+
+
+@app.get("/admin/bench/directed/runs")
+async def admin_bench_directed_runs():
+    return {"data": _bench_list_directed()}
+
+
+@app.get("/admin/bench/directed/runs/{run_id}")
+async def admin_bench_directed_get(run_id: str):
+    r = _bench_get_directed(run_id)
+    if not r:
+        raise HTTPException(404, f"unknown run {run_id}")
+    return r
+
+
+@app.get("/admin/bench/directed/runs/{run_id}/markdown")
+async def admin_bench_directed_md(run_id: str):
+    r = _bench_get_directed(run_id)
+    if not r:
+        raise HTTPException(404, f"unknown run {run_id}")
+    return PlainTextResponse(_bench_directed_md(r), media_type="text/markdown")
+
+
+@app.delete("/admin/bench/directed/runs/{run_id}")
+async def admin_bench_directed_delete(run_id: str):
+    if not _bench_delete_directed(run_id):
         raise HTTPException(404, f"unknown run {run_id}")
     return {"ok": True}
 

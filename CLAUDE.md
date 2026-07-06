@@ -97,3 +97,30 @@ in. Same setup as Odysseus.
 - Not a product (internal cockpit for the operator)
 - Not Companion's responsibility (separation of concerns)
 - Not auto-discovery (services explicitly listed in code)
+
+## Directed benchmark
+
+5e bench dans la famille (`bench_directed.py`). Différent des 4 benchs de perf :
+envoie une liste ordonnée de prompts (lus sur disque) à UN modèle, écrit chaque
+réponse dans un dossier pour analyse ultérieure.
+
+**Structure attendue** dans `{test_repo}/` :
+```
+{test_repo}/
+├── instructions.md      # lu UNE fois, envoyé comme system message à chaque prompt
+├── prompt/              # .md / .txt triés par nom de fichier (01_xxx, 02_xxx, …)
+└── answer/              # créé au 1er run
+    └── {run_id}/{model_slug}/
+        ├── 01_xxx.md
+        └── _run.json
+```
+
+**Path par défaut** : `/Volumes/ext_512/workplace/benchs/{test_name}` (overridable
+via le champ `test_repo` du formulaire UI, ou `ODYSSAI_BENCH_DEFAULT_TEST_REPO`).
+Le container monte `/Volumes/ext_512` en `rw` (cf `docker-compose.yml`).
+
+**Routes** : `/admin/bench/directed/*` (run, stream, abort, runs, runs/{id},
+runs/{id}/markdown, delete). SSE events : `runStart`, `promptStart`,
+`promptDone`, `progress`, `runDone`.
+
+**Bouton "Analyse"** dans l'UI est volontairement **disabled** — projet futur.

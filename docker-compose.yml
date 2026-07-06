@@ -17,6 +17,8 @@ services:
       - ${HOME}/.ssh:/root/.ssh:ro
       # Persisted bench history + future state
       - odyssai-services-data:/app/data
+      # Directed benchmark test repos (instruction + prompts + answers)
+      - /Volumes/ext_512:/Volumes/ext_512:rw
     network_mode: bridge
 
 volumes:
